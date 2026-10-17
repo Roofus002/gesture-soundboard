@@ -1,0 +1,67 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-family: Arial, sans-serif;
+
+    background: #111;
+    color: white;
+}
+
+.demo {
+    width: min(900px, 92%);
+    text-align: center;
+}
+
+button {
+    padding: 12px 24px;
+    margin: 20px;
+
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.camera-container {
+    width: 100%;
+    max-width: 640px;
+
+    margin: auto;
+
+    overflow: hidden;
+
+    border-radius: 16px;
+    background: black;
+}
+
+video {
+    display: block;
+
+    width: 100%;
+    height: auto;
+
+    transform: scaleX(-1);
+}
+
+.status-panel {
+    margin-top: 20px;
+}
+
+#backendStatus {
+    color: orange;
+}
+
+#gestureStatus {
+    font-weight: bold;
+}
+
+canvas {
+    display: none;
+}

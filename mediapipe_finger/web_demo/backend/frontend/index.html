@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Gesture Soundboard</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/styles.css"
+    >
+</head>
+
+<body>
+
+    <main class="demo">
+
+        <h1>Gesture Soundboard</h1>
+
+        <p>
+            Real-time hand gesture recognition powered by
+            Python, MediaPipe and OpenCV.
+        </p>
+
+        <button id="startButton">
+            Start Camera
+        </button>
+
+        <div class="camera-container">
+
+            <video
+                id="camera"
+                autoplay
+                playsinline
+                muted>
+            </video>
+
+        </div>
+
+        <div class="status-panel">
+
+            <p>
+                Backend:
+                <span id="backendStatus">
+                    Disconnected
+                </span>
+            </p>
+
+            <p>
+                Gesture:
+                <span id="gestureStatus">
+                    Waiting
+                </span>
+            </p>
+
+        </div>
+
+        <canvas id="frameCanvas"></canvas>
+
+        <audio
+            id="middleFingerSound"
+            src="/static/assets/FU.mp3"
+            preload="auto">
+        </audio>
+
+    </main>
+
+    <script src="/static/script.js"></script>
+
+</body>
+
+</html>
