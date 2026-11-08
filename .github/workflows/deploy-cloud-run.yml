@@ -1,0 +1,76 @@
+
+name: Deploy Gesture Soundboard
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: gesture-soundboard-production
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: gesture-soundboard-roofus002
+  REGION: australia-southeast1
+  IMAGE: australia-southeast1-docker.pkg.dev/gesture-soundboard-roofus002/cloud-run-source-deploy/gesture-soundboard:${{ github.sha }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Check Python syntax
+        run: python -m compileall -q mediapipe_finger/web_demo/backend
+
+      - name: Check required assets
+        run: |
+          test -f mediapipe_finger/models/hand_landmarker.task
+          test -f mediapipe_finger/web_demo/backend/frontend/assets/FU.mp3
+
+      - name: Build Docker image
+        run: docker build -t "$IMAGE" ./mediapipe_finger
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: gesture-soundboard-roofus002
+          workload_identity_provider: projects/79446848790/locations/global/workloadIdentityPools/github-actions/providers/gesture-soundboard
+          service_account: github-deployer@gesture-soundboard-roofus002.iam.gserviceaccount.com
+
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker authentication
+        run: |
+          gcloud auth configure-docker australia-southeast1-docker.pkg.dev --quiet
+
+      - name: Push Docker image
+        run: docker push "$IMAGE"
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          project_id: gesture-soundboard-roofus002
+          service: gesture-soundboard
+          region: australia-southeast1
+          image: ${{ env.IMAGE }}
+
+      - name: Check deployed application
+        run: |
+          curl --fail --retry 5 --retry-delay 3 \
+            --show-error --silent \
+            "${{ steps.deploy.outputs.url }}/health"
