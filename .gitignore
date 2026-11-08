@@ -24,3 +24,5 @@ runs/
 # Python caches
 .pytest_cache/
 .mypy_cache/
+
+gha-creds-*.json
