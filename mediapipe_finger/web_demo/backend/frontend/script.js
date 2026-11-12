@@ -16,6 +16,8 @@ const gestureStatus =
 const middleFingerSound =
     document.getElementById("middleFingerSound");
 
+const fistShakeSound =
+    document.getElementById("fistShakeSound");
 
 const ctx = canvas.getContext("2d");
 
@@ -139,13 +141,14 @@ function connectWebSocket() {
     };
 
 
-    socket.onmessage = (event) => {
+        socket.onmessage = (event) => {
 
         waitingForResult = false;
 
+        console.log("WebSocket received:", event.data);
+
         handleGesture(event.data);
     };
-
 
     socket.onclose = () => {
 
@@ -176,6 +179,7 @@ function startSendingFrames() {
 }
 
 
+
 function sendFrame() {
 
     if (
@@ -187,10 +191,11 @@ function sendFrame() {
         return;
     }
 
+    // Reserve the request slot BEFORE encoding.
+    waitingForResult = true;
 
     canvas.width = 640;
     canvas.height = 480;
-
 
     ctx.drawImage(
         video,
@@ -200,55 +205,72 @@ function sendFrame() {
         canvas.height
     );
 
+    canvas.toBlob((blob) => {
 
-    canvas.toBlob(
+        if (
+            !blob ||
+            !socket ||
+            socket.readyState !== WebSocket.OPEN
+        ) {
+            waitingForResult = false;
+            return;
+        }
 
-        async (blob) => {
+        try {
+            // WebSocket can send a Blob directly.
+            socket.send(blob);
+        }
+        catch (error) {
+            waitingForResult = false;
+            console.error("Frame sending failed:", error);
+        }
 
-            if (!blob) {
-                return;
-            }
-
-
-            const buffer =
-                await blob.arrayBuffer();
-
-
-            waitingForResult = true;
-
-
-            socket.send(buffer);
-        },
-
-        "image/jpeg",
-        0.7
-    );
+    }, "image/jpeg", 0.7);
 }
 
 
 function handleGesture(gesture) {
 
+    // Existing middle-finger gesture
     if (gesture === "middle_finger") {
 
-        gestureStatus.textContent =
-            "Middle Finger";
+        gestureStatus.textContent = "Middle Finger";
 
         if (!middleFingerLatched) {
 
             middleFingerSound
                 .cloneNode()
                 .play()
-                .catch(() => {});
+                .catch(console.error);
 
             middleFingerLatched = true;
         }
+
+        return;
     }
 
-    else if (gesture === "normal") {
+    // Reset once the middle finger is lowered.
+    middleFingerLatched = false;
 
-        gestureStatus.textContent =
-            "Normal";
+    // New movement-based gesture
+    if (gesture === "fist_shake") {
 
-        middleFingerLatched = false;
+        gestureStatus.textContent = "Fist Shake";
+
+        fistShakeSound
+            .cloneNode()
+            .play()
+            .catch(console.error);
+
+        return;
+    }
+
+    if (gesture === "fist") {
+    gestureStatus.textContent = "Fist Detected ✊";
+    return;
+    }
+
+    if (gesture === "normal") {
+        gestureStatus.textContent = "Normal";
     }
 }

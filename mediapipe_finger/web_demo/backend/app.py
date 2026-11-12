@@ -7,7 +7,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from hand_detector import detect_middle_finger
+from gesture_engine import GestureEngine
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -42,6 +42,8 @@ async def websocket_endpoint(websocket: WebSocket):
 
     await websocket.accept()
 
+    engine = GestureEngine()
+
     print("Browser connected")
 
     try:
@@ -64,12 +66,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_text("decode_failed")
                 continue
 
-            middle_finger = detect_middle_finger(frame)
-
-            if middle_finger:
-                await websocket.send_text("middle_finger")
-            else:
-                await websocket.send_text("normal")
+            gesture = engine.process(frame)
+            await websocket.send_text(gesture)
 
     except WebSocketDisconnect:
         print("Browser disconnected")

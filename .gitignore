@@ -25,4 +25,5 @@ runs/
 .pytest_cache/
 .mypy_cache/
 
+# Temporary cred files from the google auth actions
 gha-creds-*.json
